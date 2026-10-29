@@ -31,6 +31,42 @@ For all installation methods and first steps, see the [**Quick Start Guide**](QU
 
 **Full documentation:** [jeffallan.github.io/claude-skills](https://jeffallan.github.io/claude-skills)
 
+## Using with Kimi Code
+
+This fork also ships a [Kimi Code](https://www.kimi.com/code/docs/en/) plugin manifest (`kimi.plugin.json`), so the same 67 skills and workflow commands work in Kimi Code CLI.
+
+**Install from GitHub:**
+
+```
+/plugins install https://github.com/zhisonghe/claude-skills
+```
+
+**Or install from a local checkout:**
+
+```
+/plugins install /path/to/claude-skills
+```
+
+**Then activate it:**
+
+```
+/reload
+```
+
+Skills are invoked under the plugin namespace, either manually or automatically by the model based on their descriptions:
+
+```
+/skill:fullstack-dev-skills:golang-pro
+/fullstack-dev-skills:execute-ticket CC-123
+```
+
+Verify the installation and check for diagnostics with `/plugins info fullstack-dev-skills`.
+
+> [!NOTE]
+> Kimi Code runs from a managed copy of the plugin (`$KIMI_CODE_HOME/plugins/managed/fullstack-dev-skills/`). After pulling updates into your checkout, reinstall the plugin to pick them up. Plugins are installed per-user and apply to all projects.
+
+For details on the plugin system, see the official docs: [Kimi Code Plugins](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins.html) and [Kimi Code Skills](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/skills.html).
+
 ## Skills
 
 <!-- SKILL_COUNT -->67<!-- /SKILL_COUNT --> specialized skills across 12 categories covering languages, backend/frontend frameworks, infrastructure, APIs, testing, DevOps, security, data/ML, and platform specialists.

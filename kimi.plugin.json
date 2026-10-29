@@ -1,7 +1,7 @@
 {
   "name": "fullstack-dev-skills",
   "version": "0.4.20",
-  "description": "Comprehensive skill pack for full-stack developers covering frameworks, workflows, and security. 67 specialized skills plus project workflow commands.",
+  "description": "Comprehensive skill pack for full-stack developers covering frameworks, workflows, and security, plus project workflow commands.",
   "keywords": [
     "fullstack",
     "typescript",

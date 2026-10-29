@@ -31,18 +31,19 @@ Parse arguments to determine mode:
 
 ## Reference Guide
 
-`<plugin-root>` below is the directory containing this plugin's manifest. Resolve it based on where the plugin runs:
-- **Claude Code (installed):** under `~/.claude/plugins/` — find it with `ls ~/.claude/plugins/*/fullstack-dev-skills*/` (marketplace installs nest one level deeper, e.g. `~/.claude/plugins/<marketplace>/fullstack-dev-skills/`).
-- **Kimi Code (installed):** under `$KIMI_CODE_HOME/plugins/managed/fullstack-dev-skills/` — resolve with `echo $KIMI_CODE_HOME` (default `~/.kimi-code`).
+The paths below use `${CLAUDE_PLUGIN_ROOT}` for the plugin root. Claude Code expands this variable automatically — use the expanded paths as-is. If you see the literal `${CLAUDE_PLUGIN_ROOT}` (your harness does not expand it, e.g. Kimi Code), substitute the plugin root yourself:
+
+- **Kimi Code (installed):** `$KIMI_CODE_HOME/plugins/managed/fullstack-dev-skills/` — resolve with `echo $KIMI_CODE_HOME` (default `~/.kimi-code`).
+- **Claude Code (manual lookup):** `~/.claude/plugins/cache/<marketplace>/fullstack-dev-skills/<version>/` — find it with `ls -d ~/.claude/plugins/cache/*/fullstack-dev-skills/*/`.
 - **Source checkout:** the repository root.
 
 Load detailed guidance based on context:
 
 | Topic | Reference | Load When |
 |-------|-----------|-----------|
-| Assumption Types & Tiers | `<plugin-root>/references/common-ground/assumption-classification.md` | Classifying assumptions, determining type or tier |
-| File Management | `<plugin-root>/references/common-ground/file-management.md` | Storage operations, project ID, ground file format |
-| Reasoning Graph | `<plugin-root>/references/common-ground/reasoning-graph.md` | Using --graph flag, generating mermaid diagrams |
+| Assumption Types & Tiers | `${CLAUDE_PLUGIN_ROOT}/references/common-ground/assumption-classification.md` | Classifying assumptions, determining type or tier |
+| File Management | `${CLAUDE_PLUGIN_ROOT}/references/common-ground/file-management.md` | Storage operations, project ID, ground file format |
+| Reasoning Graph | `${CLAUDE_PLUGIN_ROOT}/references/common-ground/reasoning-graph.md` | Using --graph flag, generating mermaid diagrams |
 
 ---
 
@@ -75,7 +76,7 @@ When no flags provided, execute the two-phase interactive flow.
    - Check existing ground file for tracked assumptions
 
 2. **Classify each assumption** by type and proposed tier:
-   - See `<plugin-root>/references/common-ground/assumption-classification.md` for classification rules
+   - See `${CLAUDE_PLUGIN_ROOT}/references/common-ground/assumption-classification.md` for classification rules
 
 3. **Present to user via AskUserQuestion:**
 
@@ -122,7 +123,7 @@ When no flags provided, execute the two-phase interactive flow.
 4. **Write ground file:**
    - Save to `~/.claude/common-ground/{project_id}/COMMON-GROUND.md`
    - Update `ground.index.json` for machine-readable access
-   - See `<plugin-root>/references/common-ground/file-management.md` for file formats
+   - See `${CLAUDE_PLUGIN_ROOT}/references/common-ground/file-management.md` for file formats
 
 ### Output
 
@@ -236,7 +237,7 @@ Make the shape of Claude's reasoning visible:
    - What alternatives were considered at each branch?
    - What confidence level exists at each node?
 
-3. **Generate mermaid diagram** following conventions in `<plugin-root>/references/common-ground/reasoning-graph.md`
+3. **Generate mermaid diagram** following conventions in `${CLAUDE_PLUGIN_ROOT}/references/common-ground/reasoning-graph.md`
 
 4. **Output files:**
    - Update `COMMON-GROUND.md` with embedded `## Reasoning Graph` section
@@ -291,7 +292,7 @@ Run `/common-ground --list` to view assumptions.
 Run `/common-ground --graph` to regenerate after changes.
 ```
 
-See `<plugin-root>/references/common-ground/reasoning-graph.md` for detailed mermaid conventions and node styling.
+See `${CLAUDE_PLUGIN_ROOT}/references/common-ground/reasoning-graph.md` for detailed mermaid conventions and node styling.
 
 ---
 

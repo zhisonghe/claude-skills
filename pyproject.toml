@@ -8,7 +8,7 @@ manifest = "commands/workflow-manifest.yaml"
 workflow_glob = "project/**/*.md"
 docs_url = "https://jeffallan.github.io/claude-skills/skills/{domain}/{name}/"
 index_files = ["SKILLS_GUIDE.md"]
-ship = ["skills", "commands", "references", ".claude-plugin", "README.md", "LICENSE"]
+ship = ["skills", "commands", "references", ".claude-plugin", "kimi.plugin.json", "README.md", "LICENSE"]
 domains = [
   { id = "language", label = "Language" },
   { id = "backend", label = "Backend Frameworks" },
@@ -77,6 +77,15 @@ patterns = [
 [[tool.skill-linter.stamp.files]]
 path = ".claude-plugin/marketplace.json"
 json = { "/metadata/version" = "version", "/plugins/0/version" = "version" }
+patterns = [
+  { key = "skillCount", regex = '(\d+) specialized skills' },
+  { key = "skillCount.language", regex = '(\d+) language experts' },
+  { key = "skillCount.backend", regex = '(\d+) backend frameworks' },
+  { key = "skillCount.frontend", regex = '(\d+) frontend/mobile' },
+]
+[[tool.skill-linter.stamp.files]]
+path = "kimi.plugin.json"
+json = { "/version" = "version" }
 patterns = [
   { key = "skillCount", regex = '(\d+) specialized skills' },
   { key = "skillCount.language", regex = '(\d+) language experts' },

@@ -76,6 +76,7 @@ assert_exit_zero "$rc" "builds into an empty directory"
 
 # Shipped content
 assert_exists "$OUT/.claude-plugin/plugin.json" "ships plugin.json"
+assert_exists "$OUT/kimi.plugin.json" "ships kimi.plugin.json"
 assert_exists "$OUT/skills" "ships skills/"
 assert_exists "$OUT/commands" "ships commands/"
 assert_exists "$OUT/references/common-ground" "ships references/common-ground/"

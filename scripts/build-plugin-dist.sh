@@ -27,6 +27,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 git -C "$REPO_ROOT" archive --format=tar HEAD -- \
     .claude-plugin \
     ':(exclude).claude-plugin/marketplace.json' \
+    kimi.plugin.json \
     skills \
     commands \
     references \

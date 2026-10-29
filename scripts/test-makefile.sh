@@ -65,7 +65,8 @@ assert_not_contains() {
 TMPDIR=$(mktemp -d)
 CLEANUP_DIRS+=("$TMPDIR")
 
-VERSION=$(python -c "import json; print(json.load(open('version.json'))['version'])")
+PYTHON=$(command -v python3 || command -v python)
+VERSION=$("$PYTHON" -c "import json; print(json.load(open('version.json'))['version'])")
 FAKE_CACHE="$TMPDIR/fullstack-dev-skills"
 CACHE_DIR="$FAKE_CACHE/$VERSION"
 
@@ -275,6 +276,24 @@ assert_exit_zero $EXIT "dsh-remove exits 0"
 assert_not_exists "$FAKE_INSTALL/skills/react-expert" "installed copy removed"
 assert_exists "$FAKE_INSTALL/skills/custom/SKILL.md" "unrelated skill kept"
 assert_exists "$FAKE_INSTALL/skills/golang-pro/SKILL.md" "colliding foreign skill kept"
+
+# ─── Test 18: dsh-install needs no Python ────────────────────────────
+echo "--- Test 18: dsh-install runs without Python ---"
+
+NO_PY_HOME="$TMPDIR/no-python-home"
+NO_PY_BUILD="$TMPDIR/no-python-build"
+ERR=$(make dsh-install PYTHON=/nonexistent-python DSH_HOME="$NO_PY_HOME" DSH_BUILD="$NO_PY_BUILD" 2>&1 >/dev/null) || ERR="make failed: $ERR"
+
+assert_equal "$ERR" "" "dsh-install emits no Python error"
+assert_dir "$NO_PY_HOME/skills/react-expert" "dsh-install installs without Python"
+
+# ─── Test 19: dev-link explains a missing Python ─────────────────────
+echo "--- Test 19: dev-link fails cleanly without Python ---"
+
+EXIT=0
+make dev-link PYTHON=/nonexistent-python CACHE_BASE="$TMPDIR/no-python-cache" > /dev/null 2>&1 || EXIT=$?
+
+assert_exit_nonzero $EXIT "dev-link fails when Python is unavailable"
 
 # ─── Summary ─────────────────────────────────────────────────────────
 echo ""

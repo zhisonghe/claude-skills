@@ -1,14 +1,21 @@
 .PHONY: dev-link dev-unlink dsh-link dsh-unlink dsh-install dsh-remove validate test site-dev site-build lint format lint-fix
 
 PLUGIN_NAME := fullstack-dev-skills
-VERSION := $(shell python -c "import json; print(json.load(open('version.json'))['version'])")
+PYTHON := $(shell command -v python3 >/dev/null 2>&1 && echo python3 || echo python)
+# Recursive on purpose: only the dev-* targets need the version, so the dsh-*
+# targets never shell out to Python and work on a machine that has none.
+VERSION = $(shell $(PYTHON) -c "import json; print(json.load(open('version.json'))['version'])" 2>/dev/null)
 CACHE_BASE := $(HOME)/.claude/plugins/cache/$(PLUGIN_NAME)/$(PLUGIN_NAME)
-CACHE_DIR := $(CACHE_BASE)/$(VERSION)
+CACHE_DIR = $(CACHE_BASE)/$(VERSION)
 DSH_HOME ?= $(HOME)/.dsh
 DSH_SKILLS := $(DSH_HOME)/skills
 DSH_BUILD := $(CURDIR)/dist/dsh/skills
 
 dev-link:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "Error: cannot read version.json; install python3 or python."; \
+		exit 1; \
+	fi
 	@if [ -L "$(CACHE_DIR)" ]; then \
 		echo "Error: $(CACHE_DIR) is already a symlink."; \
 		exit 1; \
@@ -30,6 +37,10 @@ dev-link:
 	@echo "Restart Claude Code to load changes from your working copy."
 
 dev-unlink:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "Error: cannot read version.json; install python3 or python."; \
+		exit 1; \
+	fi
 	@if [ ! -L "$(CACHE_DIR)" ]; then \
 		echo "Error: $(CACHE_DIR) is not a symlink. Nothing to unlink."; \
 		exit 1; \

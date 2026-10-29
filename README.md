@@ -69,18 +69,27 @@ For details on the plugin system, see the official docs: [Kimi Code Plugins](htt
 
 ## Using with DeepSeek Harness
 
-DeepSeek Harness (DSH) reads the same `SKILL.md` format and needs no manifest: it discovers directory bundles from `~/.dsh/skills`, `<repo>/.dsh/skills` and `<repo>/.agents/skills`. Link this checkout's skills into the user root:
+DeepSeek Harness (DSH) reads the same `SKILL.md` format and needs no manifest: it discovers directory bundles from `~/.dsh/skills`, `<repo>/.dsh/skills` and `<repo>/.agents/skills`. Install this checkout's skills into the user root in one of two ways.
+
+**Linked** (default) keeps them live from this checkout:
 
 ```bash
 make dsh-link    # symlink all 67 skills into ~/.dsh/skills
 make dsh-unlink  # remove only the links that point at this checkout
 ```
 
-Every skill links straight from `skills/`, so edits are live — except the two that name Claude Code's `AskUserQuestion` (`feature-forge`, `the-fool`). `make dsh-link` copies those to `dist/dsh/skills/` with the name rewritten to DSH's `ask_user_question` and a note on its `id`/`multi_select` schema, then links the copy. Their sources are never modified, and re-running the target after a pull rebuilds the copies.
+**Copied** makes `~/.dsh/skills` self-contained (~5 MB) and independent of this checkout; re-run after a pull, since a copy is a snapshot:
 
-Set `DSH_HOME` to target a different harness home (`make dsh-link DSH_HOME=/path/to/home`). DSH watches the skill roots, so a running session picks the skills up on its next turn without a restart, and the composer lists them under `/`. Invoke one explicitly with `/react-expert`, or let the model select it from its description.
+```bash
+make dsh-install  # copy all 67 skills into ~/.dsh/skills
+make dsh-remove   # delete only the copies this checkout owns
+```
 
-**Partial fits:** DSH ignores `allowed-tools` in the three skills that declare it. **Not available in DSH:** the ten commands under `commands/` — DSH commands are plugin-registered handlers, not markdown files — and the `kimi.plugin.json` and `.claude-plugin/plugin.json` manifests, which DSH does not read. Linking all 67 skills also adds roughly 7k tokens of catalog to every session, so link only the stacks you use if that matters.
+Both modes rewrite the two skills that name Claude Code's `AskUserQuestion` (`feature-forge`, `the-fool`) to DSH's `ask_user_question`, adding a note on its `id`/`multi_select` schema; the sources are never modified. `dsh-install` also replaces links left by `dsh-link`, while `dsh-link` leaves installed copies alone. Install, remove and unlink touch only entries they can prove they own — a link into this checkout, or a directory whose `SKILL.md` names the same skill — so a skill of your own under a colliding name is never deleted.
+
+Set `DSH_HOME` to target a different harness home (`make dsh-link DSH_HOME=/path/to/home`, and likewise for `dsh-install` and `dsh-remove`). DSH watches the skill roots, so a running session picks the skills up on its next turn without a restart, and the composer lists them under `/`. Invoke one explicitly with `/react-expert`, or let the model select it from its description.
+
+**Partial fits:** DSH ignores `allowed-tools` in the three skills that declare it. **Not available in DSH:** the ten commands under `commands/` — DSH commands are plugin-registered handlers, not markdown files — and the `kimi.plugin.json` and `.claude-plugin/plugin.json` manifests, which DSH does not read. Installing all 67 skills also adds roughly 7k tokens of catalog to every session, so install only the stacks you use if that matters.
 
 ## Skills
 

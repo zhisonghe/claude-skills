@@ -1,4 +1,4 @@
-.PHONY: dev-link dev-unlink dsh-link dsh-unlink validate test site-dev site-build lint format lint-fix
+.PHONY: dev-link dev-unlink dsh-link dsh-unlink dsh-install dsh-remove validate test site-dev site-build lint format lint-fix
 
 PLUGIN_NAME := fullstack-dev-skills
 VERSION := $(shell python -c "import json; print(json.load(open('version.json'))['version'])")
@@ -90,6 +90,14 @@ dsh-unlink:
 	else \
 		echo "Removed $$removed link(s) from $(DSH_SKILLS)"; \
 	fi
+
+dsh-install:
+	@bash "$(CURDIR)/scripts/build-dsh-skills.sh" --all "$(DSH_BUILD)"
+	@bash "$(CURDIR)/scripts/sync-dsh-skills.sh" install "$(DSH_BUILD)" "$(DSH_SKILLS)"
+	@echo "DeepSeek Harness refreshes its catalog on the next turn; no restart needed."
+
+dsh-remove:
+	@bash "$(CURDIR)/scripts/sync-dsh-skills.sh" remove "$(DSH_SKILLS)"
 
 validate:
 	uvx skill-linter@0.2.0 release

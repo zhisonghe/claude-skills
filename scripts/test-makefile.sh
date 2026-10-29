@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #
-# Test the Makefile dev-link, dev-unlink, dsh-link, dsh-unlink, and
-# validate targets. Uses temporary directories to simulate the plugin
-# cache and the DSH home — never the real ~/.claude/plugins/ or ~/.dsh/.
+# Test the Makefile dev-link, dev-unlink, dsh-link, dsh-unlink,
+# dsh-install, dsh-remove, and validate targets. Uses temporary
+# directories to simulate the plugin cache and the DSH home — never
+# the real ~/.claude/plugins/ or ~/.dsh/.
 #
 # Usage: bash scripts/test-makefile.sh
 # Exit codes: 0 = all tests pass, 1 = failure
@@ -34,6 +35,10 @@ assert_dir() {
 
 assert_not_exists() {
     if [ ! -e "$1" ]; then pass "$2"; else fail "$2 (still exists)"; fi
+}
+
+assert_exists() {
+    if [ -e "$1" ]; then pass "$2"; else fail "$2 (missing)"; fi
 }
 
 assert_exit_nonzero() {
@@ -218,6 +223,58 @@ EXIT=0
 make dsh-unlink DSH_HOME="$TMPDIR/absent-home" DSH_BUILD="$FAKE_BUILD" > /dev/null 2>&1 || EXIT=$?
 
 assert_exit_nonzero $EXIT "dsh-unlink fails without a skill root"
+
+# ─── Test 14: dsh-install copies every skill ─────────────────────────
+echo "--- Test 14: dsh-install copies skills ---"
+
+FAKE_INSTALL="$TMPDIR/install-home"
+FAKE_ALL="$TMPDIR/install-build"
+
+EXIT=0
+make dsh-install DSH_HOME="$FAKE_INSTALL" DSH_BUILD="$FAKE_ALL" > /dev/null 2>&1 || EXIT=$?
+
+assert_exit_zero $EXIT "dsh-install exits 0"
+assert_dir "$FAKE_INSTALL/skills/react-expert" "installed skill is a real directory"
+assert_contains "$FAKE_INSTALL/skills/feature-forge/SKILL.md" "ask_user_question" "installed copy is adapted"
+INSTALLED=$(find "$FAKE_INSTALL/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+assert_equal "$INSTALLED" "$SKILL_COUNT" "dsh-install copies every skill ($SKILL_COUNT)"
+
+# ─── Test 15: dsh-install replaces only owned entries ────────────────
+echo "--- Test 15: dsh-install keeps foreign entries ---"
+
+mkdir -p "$FAKE_INSTALL/skills/custom"
+printf -- '---\nname: custom\ndescription: mine\n---\n\n# Custom\n' > "$FAKE_INSTALL/skills/custom/SKILL.md"
+rm -rf "$FAKE_INSTALL/skills/golang-pro"
+mkdir -p "$FAKE_INSTALL/skills/golang-pro"
+printf -- '---\nname: my-go\ndescription: mine\n---\n\n# Mine\n' > "$FAKE_INSTALL/skills/golang-pro/SKILL.md"
+
+EXIT=0
+make dsh-install DSH_HOME="$FAKE_INSTALL" DSH_BUILD="$FAKE_ALL" > /dev/null 2>&1 || EXIT=$?
+
+assert_exit_zero $EXIT "re-install exits 0"
+assert_contains "$FAKE_INSTALL/skills/custom/SKILL.md" "mine" "unrelated skill preserved"
+assert_contains "$FAKE_INSTALL/skills/golang-pro/SKILL.md" "my-go" "colliding foreign skill preserved"
+assert_contains "$FAKE_INSTALL/skills/react-expert/SKILL.md" "react-expert" "owned copy refreshed"
+
+# ─── Test 16: dsh-link leaves installed copies alone ─────────────────
+echo "--- Test 16: dsh-link does not replace copies ---"
+
+EXIT=0
+make dsh-link DSH_HOME="$FAKE_INSTALL" DSH_BUILD="$FAKE_ALL" > /dev/null 2>&1 || EXIT=$?
+
+assert_exit_zero $EXIT "dsh-link exits 0 with copies present"
+assert_dir "$FAKE_INSTALL/skills/react-expert" "installed copy stays a real directory"
+
+# ─── Test 17: dsh-remove deletes only owned entries ──────────────────
+echo "--- Test 17: dsh-remove removes own copies only ---"
+
+EXIT=0
+make dsh-remove DSH_HOME="$FAKE_INSTALL" > /dev/null 2>&1 || EXIT=$?
+
+assert_exit_zero $EXIT "dsh-remove exits 0"
+assert_not_exists "$FAKE_INSTALL/skills/react-expert" "installed copy removed"
+assert_exists "$FAKE_INSTALL/skills/custom/SKILL.md" "unrelated skill kept"
+assert_exists "$FAKE_INSTALL/skills/golang-pro/SKILL.md" "colliding foreign skill kept"
 
 # ─── Summary ─────────────────────────────────────────────────────────
 echo ""

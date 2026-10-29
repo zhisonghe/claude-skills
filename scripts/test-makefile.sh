@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Test the Makefile dev-link, dev-unlink, and validate targets.
-# Uses a temporary directory to simulate the plugin cache — does not
-# touch the real ~/.claude/plugins/ directory.
+# Test the Makefile dev-link, dev-unlink, dsh-link, dsh-unlink, and
+# validate targets. Uses temporary directories to simulate the plugin
+# cache and the DSH home — never the real ~/.claude/plugins/ or ~/.dsh/.
 #
 # Usage: bash scripts/test-makefile.sh
 # Exit codes: 0 = all tests pass, 1 = failure
@@ -42,6 +42,18 @@ assert_exit_nonzero() {
 
 assert_exit_zero() {
     if [ "$1" -eq 0 ]; then pass "$2"; else fail "$2 (expected exit 0, got $1)"; fi
+}
+
+assert_equal() {
+    if [ "$1" = "$2" ]; then pass "$3"; else fail "$3 (expected $2, got $1)"; fi
+}
+
+assert_contains() {
+    if grep -q "$2" "$1" 2>/dev/null; then pass "$3"; else fail "$3 (missing '$2')"; fi
+}
+
+assert_not_contains() {
+    if grep -q "$2" "$1" 2>/dev/null; then fail "$3 (found '$2')"; else pass "$3"; fi
 }
 
 # Setup: create a temp directory simulating the plugin cache structure
@@ -145,6 +157,67 @@ EXIT=0
 make validate > /dev/null 2>&1 || EXIT=$?
 
 assert_exit_zero $EXIT "validate exits 0"
+
+# ─── Test 9: dsh-link links every skill ──────────────────────────────
+echo "--- Test 9: dsh-link creates skill symlinks ---"
+
+FAKE_DSH="$TMPDIR/dsh-home"
+FAKE_BUILD="$TMPDIR/dsh-build"
+SKILL_COUNT=$(find skills -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+
+EXIT=0
+make dsh-link DSH_HOME="$FAKE_DSH" DSH_BUILD="$FAKE_BUILD" > /dev/null 2>&1 || EXIT=$?
+
+assert_exit_zero $EXIT "dsh-link exits 0"
+assert_symlink "$FAKE_DSH/skills/react-expert" "skill directory is a symlink"
+LINK_COUNT=$(find "$FAKE_DSH/skills" -mindepth 1 -maxdepth 1 -type l | wc -l | tr -d ' ')
+assert_equal "$LINK_COUNT" "$SKILL_COUNT" "dsh-link links every skill ($SKILL_COUNT)"
+
+# ─── Test 10: dsh-link adapts Claude-only tool names ─────────────────
+echo "--- Test 10: adapted copies rewrite AskUserQuestion ---"
+
+assert_contains "$FAKE_DSH/skills/feature-forge/SKILL.md" "ask_user_question" "adapted skill uses the DSH tool name"
+assert_not_contains "$FAKE_DSH/skills/feature-forge/SKILL.md" "AskUserQuestion" "adapted skill drops the Claude tool name"
+assert_not_contains "$FAKE_DSH/skills/the-fool/references/mode-selection-guide.md" "AskUserQuestion" "adapted reference drops the Claude tool name"
+assert_contains "skills/feature-forge/SKILL.md" "AskUserQuestion" "source skill is unchanged"
+ADAPTED=$(find "$FAKE_DSH/skills" -mindepth 1 -maxdepth 1 -type l -exec readlink {} \; | grep -c "^$FAKE_BUILD/" || true)
+assert_equal "$ADAPTED" "2" "two skills link to adapted copies"
+
+# ─── Test 11: dsh-link is idempotent, keeps non-symlink entries ──────
+echo "--- Test 11: dsh-link idempotent, skips real directories ---"
+
+rm "$FAKE_DSH/skills/golang-pro"
+mkdir -p "$FAKE_DSH/skills/golang-pro"
+
+EXIT=0
+make dsh-link DSH_HOME="$FAKE_DSH" DSH_BUILD="$FAKE_BUILD" > /dev/null 2>&1 || EXIT=$?
+
+assert_exit_zero $EXIT "dsh-link exits 0 when a real directory exists"
+assert_dir "$FAKE_DSH/skills/golang-pro" "existing real directory is preserved"
+assert_symlink "$FAKE_DSH/skills/react-expert" "re-linking is idempotent"
+
+rm -rf "$FAKE_DSH/skills/golang-pro"
+
+# ─── Test 12: dsh-unlink removes only this checkout's links ──────────
+echo "--- Test 12: dsh-unlink removes own links only ---"
+
+ln -s /nonexistent "$FAKE_DSH/skills/custom-skill"
+
+EXIT=0
+make dsh-unlink DSH_HOME="$FAKE_DSH" DSH_BUILD="$FAKE_BUILD" > /dev/null 2>&1 || EXIT=$?
+
+assert_exit_zero $EXIT "dsh-unlink exits 0"
+assert_not_exists "$FAKE_DSH/skills/react-expert" "checkout link removed"
+assert_not_exists "$FAKE_DSH/skills/feature-forge" "adapted-copy link removed"
+assert_symlink "$FAKE_DSH/skills/custom-skill" "unrelated symlink preserved"
+
+# ─── Test 13: dsh-unlink guard — no skill root ───────────────────────
+echo "--- Test 13: dsh-unlink guard (missing skill root) ---"
+
+EXIT=0
+make dsh-unlink DSH_HOME="$TMPDIR/absent-home" DSH_BUILD="$FAKE_BUILD" > /dev/null 2>&1 || EXIT=$?
+
+assert_exit_nonzero $EXIT "dsh-unlink fails without a skill root"
 
 # ─── Summary ─────────────────────────────────────────────────────────
 echo ""

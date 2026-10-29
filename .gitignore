@@ -36,6 +36,9 @@ __pycache__/
 *.tmp
 *.temp
 
+# DeepSeek Harness adapted skill copies (`make dsh-link`)
+/dist/
+
 # Awesome list submission workspace
 submits/
 

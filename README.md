@@ -67,6 +67,21 @@ Verify the installation and check for diagnostics with `/plugins info fullstack-
 
 For details on the plugin system, see the official docs: [Kimi Code Plugins](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins.html) and [Kimi Code Skills](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/skills.html).
 
+## Using with DeepSeek Harness
+
+DeepSeek Harness (DSH) reads the same `SKILL.md` format and needs no manifest: it discovers directory bundles from `~/.dsh/skills`, `<repo>/.dsh/skills` and `<repo>/.agents/skills`. Link this checkout's skills into the user root:
+
+```bash
+make dsh-link    # symlink all 67 skills into ~/.dsh/skills
+make dsh-unlink  # remove only the links that point at this checkout
+```
+
+Every skill links straight from `skills/`, so edits are live — except the two that name Claude Code's `AskUserQuestion` (`feature-forge`, `the-fool`). `make dsh-link` copies those to `dist/dsh/skills/` with the name rewritten to DSH's `ask_user_question` and a note on its `id`/`multi_select` schema, then links the copy. Their sources are never modified, and re-running the target after a pull rebuilds the copies.
+
+Set `DSH_HOME` to target a different harness home (`make dsh-link DSH_HOME=/path/to/home`). DSH watches the skill roots, so a running session picks the skills up on its next turn without a restart, and the composer lists them under `/`. Invoke one explicitly with `/react-expert`, or let the model select it from its description.
+
+**Partial fits:** DSH ignores `allowed-tools` in the three skills that declare it. **Not available in DSH:** the ten commands under `commands/` — DSH commands are plugin-registered handlers, not markdown files — and the `kimi.plugin.json` and `.claude-plugin/plugin.json` manifests, which DSH does not read. Linking all 67 skills also adds roughly 7k tokens of catalog to every session, so link only the stacks you use if that matters.
+
 ## Skills
 
 <!-- SKILL_COUNT -->67<!-- /SKILL_COUNT --> specialized skills across 12 categories covering languages, backend/frontend frameworks, infrastructure, APIs, testing, DevOps, security, data/ML, and platform specialists.

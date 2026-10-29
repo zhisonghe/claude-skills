@@ -31,7 +31,10 @@ Parse arguments to determine mode:
 
 ## Reference Guide
 
-`<plugin-root>` below is the directory containing this plugin's manifest (`kimi.plugin.json` / `.claude-plugin/plugin.json`). When installed in Kimi Code, resolve it with `echo $KIMI_CODE_HOME` and look under `$KIMI_CODE_HOME/plugins/managed/fullstack-dev-skills/`; when running from a source checkout, it is the repository root.
+`<plugin-root>` below is the directory containing this plugin's manifest. Resolve it based on where the plugin runs:
+- **Claude Code (installed):** under `~/.claude/plugins/` — find it with `ls ~/.claude/plugins/*/fullstack-dev-skills*/` (marketplace installs nest one level deeper, e.g. `~/.claude/plugins/<marketplace>/fullstack-dev-skills/`).
+- **Kimi Code (installed):** under `$KIMI_CODE_HOME/plugins/managed/fullstack-dev-skills/` — resolve with `echo $KIMI_CODE_HOME` (default `~/.kimi-code`).
+- **Source checkout:** the repository root.
 
 Load detailed guidance based on context:
 
